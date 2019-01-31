@@ -64,7 +64,7 @@ editor.session.setMode('ace/mode/yaml');
 function do_submit() {
     var query = editor.getValue();
     $.ajax({
-        url: '/cgi-bin/repo-query',
+        url: 'cgi-bin/repo-query',
         data: {'query': query},
         dataType: 'text'
     })
