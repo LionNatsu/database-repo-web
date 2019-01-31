@@ -50,7 +50,7 @@ tf.flush()
 
 client = pymongo.MongoClient(
     'mongodb://query:Tcp5GxVR@139.198.122.37:57017/p-vector',
-    appname='smallCat', ssl_ca_certs=tf.name)
+    appname='smallCat', ssl_ca_certs=tf.name, ssl_match_hostname=False)
 
 tf.close()
 
