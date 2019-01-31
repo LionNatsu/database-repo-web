@@ -7,9 +7,6 @@ import cgi
 import cgitb
 cgitb.enable()
 
-print('Content-Type: text/plain')
-print('')
-
 form = cgi.FieldStorage()
 try:
     query = form['query'].value
@@ -62,6 +59,8 @@ db = client['p-vector']
 col = db[branch + '-main' + suffix]
 
 def agg(c, ar):
+    print('Content-Type: text/plain')
+    print('')
     print(yaml.dump([*c.aggregate(ar)], indent=4), end='')
 
 if query.strip() == '': exit()
