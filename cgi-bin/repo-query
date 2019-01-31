@@ -1,0 +1,69 @@
+#!/bin/python3
+
+# Copyright (C) 2019 Daming Yang
+# This program is free software, released under Server Side Public License.
+
+import cgi
+import cgitb
+cgitb.enable()
+
+print('Content-Type: text/plain')
+print('')
+
+form = cgi.FieldStorage()
+try:
+    query = form['query'].value
+except:
+    query = '''
+- $group:
+    _id: $pkg.name
+'''
+try:
+    first_line = query.split('\n')[0].strip()
+    if not first_line.startswith('#'): raise Exception
+    first_line = first_line.lstrip('#').strip()
+    branch = first_line.split(',')[0].strip()
+    if branch == '': raise Exception
+    suffix = '' if 'files' not in first_line else '.files'
+except:
+    branch = 'stable'
+    suffix = ''
+
+import pymongo
+import tempfile
+import yaml
+
+tf = tempfile.NamedTemporaryFile()
+tf.write(b'''
+-----BEGIN CERTIFICATE-----
+MIIB/TCCAYOgAwIBAgIJANNe1IsFxyKOMAoGCCqGSM49BAMCMDsxDTALBgNVBAoM
+BEFPU0MxETAPBgNVBAsMCERhdGFiYXNlMRcwFQYDVQQDDA4xMzkuMTk4LjEyMi4z
+NzAeFw0xODA3MTkxOTAxNDdaFw0yMjA3MTkxOTAxNDdaMDsxDTALBgNVBAoMBEFP
+U0MxETAPBgNVBAsMCERhdGFiYXNlMRcwFQYDVQQDDA4xMzkuMTk4LjEyMi4zNzB2
+MBAGByqGSM49AgEGBSuBBAAiA2IABDf4D4+M7y5qDd82mCbGCA86a9VRh7TLtuBq
+3MtblVrNWy6ODSLs1b+3kTIxgDr/LKHmASaYD78V2Xmn44CoWeNhfA0wG1TTsjbl
+LlutdSXbt2PttO91POb5PG8OY6WfmaNTMFEwHQYDVR0OBBYEFFEt9YP8vln7hFPZ
+T4sXNRS1Az3MMB8GA1UdIwQYMBaAFFEt9YP8vln7hFPZT4sXNRS1Az3MMA8GA1Ud
+EwEB/wQFMAMBAf8wCgYIKoZIzj0EAwIDaAAwZQIxAIrfE5Ao0dTsESIiDfIFQ1Fw
+EQM7FCp5oxcIIEBLWnsqjMq3DuB0FEI7bz2Bs1PStgIwGlKhYrJT3ZQKMECXmTy/
+YQCtr7+yBqxdVgDivjUcCwKmQ0Mizmx9NcCahi306Gvy
+-----END CERTIFICATE-----
+''')
+tf.flush()
+
+client = pymongo.MongoClient(
+    'mongodb://query:Tcp5GxVR@139.198.122.37:57017/p-vector',
+    appname='smallCat', ssl_ca_certs=tf.name)
+
+tf.close()
+
+db = client['p-vector']
+
+col = db[branch + '-main' + suffix]
+
+def agg(c, ar):
+    print(yaml.dump([*c.aggregate(ar)], indent=4), end='')
+
+if query.strip() == '': exit()
+agg(col, yaml.load(query))
+
